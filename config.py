@@ -15,3 +15,5 @@ ONE_HOT_ENCODING = {
 ORDINAL_ENCODING = {
   'plan_type': {'Basic': 0, 'Standard': 1, 'Premium': 2, 'Enterprise': 3}
 }
+
+MODEL_VERSION = "1"

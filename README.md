@@ -150,7 +150,7 @@ open http://localhost:5000
 ## Status
 
 - [x] Step 1 — Project scaffold
-- [ ] Step 2 — Train and serialize model
+- [x] Step 2 — Train and serialize model
 - [ ] Step 3 — MLflow tracking
 - [ ] Step 4 — Pydantic schemas
 - [ ] Step 5 — Model loader
