@@ -149,7 +149,7 @@ open http://localhost:5000
 
 ## Status
 
-- [ ] Step 1 — Project scaffold
+- [x] Step 1 — Project scaffold
 - [ ] Step 2 — Train and serialize model
 - [ ] Step 3 — MLflow tracking
 - [ ] Step 4 — Pydantic schemas
