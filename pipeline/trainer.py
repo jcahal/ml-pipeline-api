@@ -11,10 +11,11 @@
 import numpy as np
 import pandas as pd
 
+import mlflow
+import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 
-import joblib
 
 from pipeline.loader import DataLoader
 from pipeline.transformer import DataTransformer
@@ -42,6 +43,10 @@ class ModelTrainer:
     df_final = df_cleaned.drop('customer_id', axis=1)
     print(f"[trainer] Transformed data shape: {df_final.shape}")
 
+    # MLFlow
+    mlflow.set_experiment("churn_prediction")
+    mlflow.sklearn.autolog()
+
     # Split the dataset
     X = df_final.drop('churned', axis=1)
     y = df_final.churned
@@ -51,10 +56,11 @@ class ModelTrainer:
 
     # Train the classifier
     print("[trainer] Fitting Classifier...")
-    clf = RandomForestClassifier(random_state=0, criterion='entropy', max_depth=6, n_estimators=25)
-    clf = clf.fit(X_train, y_train)
-    print(f"[trainer] Training accuracy: {clf.score(X_train, y_train):.4f}")
-    print(f"[trainer] Test accuracy:     {clf.score(X_test, y_test):.4f}")
+
+    with mlflow.start_run():
+      clf = RandomForestClassifier(random_state=0, criterion='entropy', max_depth=6, n_estimators=25)
+      clf = clf.fit(X_train, y_train)
+      print(f"[trainer] Training accuracy: {clf.score(X_train, y_train):.4f}, Test accuracy: {clf.score(X_test, y_test):.4f}")
 
     # Dump/Return the trained classifier
     print("[trainer] Dumping model to models/churn_model_v1.pkl")
