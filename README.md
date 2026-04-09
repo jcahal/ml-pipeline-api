@@ -152,7 +152,7 @@ open http://localhost:5000
 - [x] Step 1 — Project scaffold
 - [x] Step 2 — Train and serialize model
 - [x] Step 3 — MLflow tracking
-- [ ] Step 4 — Pydantic schemas
+- [x] Step 4 — Pydantic schemas
 - [ ] Step 5 — Model loader
 - [ ] Step 6 — FastAPI routes
 - [ ] Step 7 — Local testing
