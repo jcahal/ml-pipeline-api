@@ -63,8 +63,8 @@ class ModelTrainer:
       print(f"[trainer] Training accuracy: {clf.score(X_train, y_train):.4f}, Test accuracy: {clf.score(X_test, y_test):.4f}")
 
     # Dump/Return the trained classifier
-    print("[trainer] Dumping model to models/churn_model_v1.pkl")
-    joblib.dump(clf, "models/churn_model_v1.pkl")
+    print(f"[trainer] Dumping model to {config.MODEL_FILE}")
+    joblib.dump(clf, config.MODEL_FILE)
     print("[trainer] Done.")
     return clf
 
