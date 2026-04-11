@@ -2,15 +2,16 @@ services:
   api:
     build: .
     ports:
-      - "8000:8000"
+      - "80:8000"
     volumes:
       - ./mlruns:/app/mlruns
       - ./models:/app/models
-    depends_on:
-      - mlflow
+    restart: always
 
   mlflow:
     image: python:3.11-slim
+    profiles:
+      - dev
     command: bash -c "pip install mlflow==2.13.0 -q && mlflow ui --host 0.0.0.0 --port 5000 --backend-store-uri /app/mlruns"
     ports:
       - "5001:5000"

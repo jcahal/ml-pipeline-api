@@ -60,8 +60,11 @@ Swagger UI available at `http://localhost:8000/docs`.
 ## Docker
 
 ```bash
-# Build and run (API on :8000, MLflow UI on :5001)
+# Build and run (API on :8000)
 docker compose up --build
+
+# Build and run with MLflow UI on :5001 also
+docker compose up --build --profile dev
 
 # Or run the API image directly
 docker build -t ml-pipeline-api .
