@@ -5,7 +5,6 @@ import config
 from .schemas import PredictionRequest, PredictionResponse
 from pipeline.transformer import DataTransformer
 
-# Classification model to be loaded from storage
 _clf = None
 
 def load_model():
@@ -15,7 +14,8 @@ def load_model():
 def predict(request: PredictionRequest) -> PredictionResponse:
   df_req = pd.DataFrame([request.model_dump()])
 
-  # Manual normalization step to match the modal features
+  # replicate the training transformations manually — I didn't serialize the fitted scaler,
+  # so we reconstruct the feature vector here to match what the model was trained on
   candidate = pd.DataFrame([{
     "age"                   : df_req.iloc[0].age,
     "tenure_months"         : df_req.iloc[0].tenure_months,
@@ -26,13 +26,13 @@ def predict(request: PredictionRequest) -> PredictionResponse:
     "region_Midwest"        : df_req.iloc[0].region == 'Midwest',
     "region_South"          : df_req.iloc[0].region == 'South',
     "region_West"           : df_req.iloc[0].region == 'West',
-    "payment_bank_transfer" : df_req.iloc[0].payment_method == 'Bank Transfer',
-    "payment_credit_card"   : df_req.iloc[0].payment_method == 'Credit Card',
-    "payment_paypal"        : df_req.iloc[0].payment_method == 'Paypal'
+    "payment_bank_transfer" : df_req.iloc[0].payment_method == 'bank_transfer',
+    "payment_credit_card"   : df_req.iloc[0].payment_method == 'credit_card',
+    "payment_paypal"        : df_req.iloc[0].payment_method == 'paypal'
   }])
+  print(candidate)
 
-  # Make the churn prediction
   prediction = int(_clf.predict(candidate)[0])
-  confidence = round(float(_clf.predict_proba(candidate)[0][prediction]), 2)
+  confidence = round(float(_clf.predict_proba(candidate)[0][prediction]), 2)  # index by predicted class to get its probability
 
   return PredictionResponse(prediction=prediction, confidence=confidence)

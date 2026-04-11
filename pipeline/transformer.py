@@ -9,7 +9,6 @@ class DataTransformer:
     self.normalize = normalize
 
   def _drop_nulls(self):
-    # Drop any rows with missing values
     try:
       self.df = self.df.dropna().copy() # explicit .copy() to quell warning
     
@@ -56,11 +55,9 @@ class DataTransformer:
     return self
   
   def transform(self):
-    # Drop nulls if flagged
     if self.drop_na:
       self = self._drop_nulls()
-    
-    # Normalize if flagged
+
     if self.normalize:
       self = self._normalize_numeric_columns()._encode_categoricals()
     

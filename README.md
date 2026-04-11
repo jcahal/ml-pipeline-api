@@ -8,7 +8,7 @@ A FastAPI service that wraps a scikit-learn classification model for customer ch
 
 - **FastAPI** — REST API framework
 - **scikit-learn** — model training and preprocessing
-- **MLflow** — experiment tracking and model registry
+- **MLflow** — experiment tracking
 - **Docker** — containerization
 - **pandas** — data handling
 - **pydantic** — request/response validation
@@ -20,12 +20,10 @@ A FastAPI service that wraps a scikit-learn classification model for customer ch
 ```
 ml-pipeline-api/
 ├── pipeline/
-│   ├── __init__.py
-│   ├── loader.py          # DataLoader class (from Project 1)
-│   ├── transformer.py     # DataTransformer class (from Project 1)
-│   └── trainer.py         # ModelTrainer class
+│   ├── loader.py          # CSV validation and loading
+│   ├── transformer.py     # Normalization and encoding
+│   └── trainer.py         # Model training with MLflow
 ├── api/
-│   ├── __init__.py
 │   ├── main.py            # FastAPI app and routes
 │   ├── schemas.py         # Pydantic request/response models
 │   └── model.py           # Model load/predict logic
@@ -37,46 +35,8 @@ ml-pipeline-api/
 │   └── test_api.py
 ├── Dockerfile
 ├── docker-compose.yml
-├── requirements.txt
-└── README.md
+└── requirements.txt
 ```
-
----
-
-## Development Plan
-
-### Step 1 — Project scaffold
-Set up the folder structure above. Create all empty `__init__.py` files. Copy `loader.py` and `transformer.py` in from the CSV pipeline project. Initialize a git repo and make the first commit.
-
-### Step 2 — Train and serialize a model
-Create `pipeline/trainer.py` with a `ModelTrainer` class. It should load `sample.csv`, run it through `DataTransformer`, train a `RandomForestClassifier` on the churn target, evaluate it (accuracy, precision, recall), and serialize the trained model to `models/churn_model.pkl` using `joblib`. Run it as a standalone script first — `python -m pipeline.trainer` — before wiring it into the API.
-
-### Step 3 — Add MLflow tracking
-Wrap the training run in `mlflow.start_run()`. Log hyperparameters with `mlflow.log_param()`, metrics with `mlflow.log_metric()`, and the model artifact with `mlflow.sklearn.log_model()`. Launch the MLflow UI with `mlflow ui` and confirm your run appears before moving on.
-
-### Step 4 — Build the Pydantic schemas
-In `api/schemas.py`, define a `PredictionRequest` model with the input fields matching your CSV columns (age, tenure_months, monthly_spend, etc.) and a `PredictionResponse` model with `prediction` (int) and `confidence` (float). Pydantic handles input validation automatically — if a required field is missing or the wrong type, FastAPI returns a clean 422 error with no extra work from you.
-
-### Step 5 — Build the model loader
-In `api/model.py`, write a `load_model()` function that deserializes `models/churn_model.pkl` and a `predict()` function that accepts a `PredictionRequest`, runs the transformer, and returns a `PredictionResponse`. Keep all model logic here — the API routes should stay thin.
-
-### Step 6 — Build the FastAPI routes
-In `api/main.py`, create the FastAPI app and define three endpoints:
-- `GET /health` — returns `{"status": "ok"}` — used by Docker and cloud platforms to check if the service is running
-- `GET /model-info` — returns model name, version, and training metrics
-- `POST /predict` — accepts a `PredictionRequest`, calls `predict()`, returns a `PredictionResponse`
-
-### Step 7 — Test it locally
-Run the server with `uvicorn api.main:app --reload` and open `http://localhost:8000/docs`. FastAPI auto-generates a Swagger UI where you can send test requests directly from the browser. Confirm all three endpoints work before touching Docker.
-
-### Step 8 — Containerize
-Update the `Dockerfile` to run the FastAPI server instead of `main.py`. Build the image and confirm the Swagger UI is reachable at `http://localhost:8000/docs` from inside the container. Add a `docker-compose.yml` for local development convenience.
-
-### Step 9 — Write one test
-In `tests/test_api.py`, use FastAPI's built-in `TestClient` to write at least one test for the `/predict` endpoint — a valid request that returns a 200, and a malformed request that returns a 422. One test file with two tests is enough to show you understand the pattern.
-
-### Step 10 — Clean up and document
-Update this README with real setup instructions, example curl commands, and a screenshot of the MLflow UI showing your training run. This is what a hiring manager will look at first.
 
 ---
 
@@ -91,23 +51,34 @@ python -m pipeline.trainer
 
 # Start the API
 uvicorn api.main:app --reload
-
-# Open the docs
-open http://localhost:8000/docs
 ```
+
+Swagger UI available at `http://localhost:8000/docs`.
+
+---
 
 ## Docker
 
 ```bash
-# Build
+# Build and run (API on :8000, MLflow UI on :5001)
+docker compose up --build
+
+# Or run the API image directly
 docker build -t ml-pipeline-api .
-
-# Run
 docker run -p 8000:8000 ml-pipeline-api
-
-# Open the docs
-open http://localhost:8000/docs
 ```
+
+---
+
+## Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Service health check |
+| GET | `/model-info` | Model name, version, and training metrics |
+| POST | `/predict` | Churn prediction for a single customer |
+
+---
 
 ## Example Request
 
@@ -134,11 +105,15 @@ curl -X POST http://localhost:8000/predict \
 }
 ```
 
+`prediction` is `0` (no churn) or `1` (churn). `confidence` is the model's probability for that class.
+
 ---
 
 ## MLflow
 
-Start the tracking UI to inspect experiment runs:
+When running via `docker compose`, the tracking UI is available at `http://localhost:5001`.
+
+To run it locally:
 
 ```bash
 mlflow ui
@@ -147,15 +122,27 @@ open http://localhost:5000
 
 ---
 
-## Status
+## Tests
 
-- [x] Step 1 — Project scaffold
-- [x] Step 2 — Train and serialize model
-- [x] Step 3 — MLflow tracking
-- [x] Step 4 — Pydantic schemas
-- [x] Step 5 — Model loader
-- [ ] Step 6 — FastAPI routes
-- [ ] Step 7 — Local testing
-- [ ] Step 8 — Docker
-- [ ] Step 9 — Tests
-- [ ] Step 10 — Docs and cleanup
+```bash
+pytest tests/
+```
+
+Requires the model to be trained (`python -m pipeline.trainer`) before running.
+
+---
+
+## Known Issues / Next Steps
+
+### Inference normalization
+Numeric features (`age`, `tenure_months`, `monthly_spend`, `num_support_tickets`) are currently passed raw to the model, but the model was trained on min-max scaled values. Predictions will be off until this is fixed.
+
+**Fix:**
+1. In `config.py` — add `SCALER_FILE = 'models/scaler_params.pkl'`
+2. In `pipeline/trainer.py` — after loading data, save min/max per column with `joblib` before transforming:
+   ```python
+   scaler_params = {col: {"min": float(df_init[col].min()), "max": float(df_init[col].max())} for col in config.NUMERICAL_COLS}
+   joblib.dump(scaler_params, config.SCALER_FILE)
+   ```
+3. In `api/model.py` — load `scaler_params.pkl` alongside the model, and apply the normalization to the candidate DataFrame before calling `_clf.predict()`
+4. Re-run `python -m pipeline.trainer` to generate `scaler_params.pkl`

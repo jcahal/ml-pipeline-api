@@ -9,14 +9,12 @@ class DataLoader:
   def load(self):
     path = self.path
 
-    # Value verification
+    # validate file type and structure
     try:
-      # File extension must be CSV
       file_ext = path.split('.')[1]
       if file_ext != 'csv':
         raise ValueError(f'Incorrect file type. File must be CSV format')
-      
-      # File columns must match given columns
+
       with open(path) as file:
         file_columns = file.readline().strip().split(',')
 
@@ -30,5 +28,4 @@ class DataLoader:
     except IOError as e:
       raise ValueError(f'Failed to read file: {e}')
 
-    # Return a DataFrame
     return pd.read_csv(path)

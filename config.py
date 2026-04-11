@@ -15,4 +15,6 @@ ORDINAL_ENCODING = {
 
 MODEL_VERSION = "1"
 
-MODEL_FILE = f'models/churn_model_v{MODEL_VERSION}.pkl'
+MODEL_NAME = f"churn_prediction_v{MODEL_VERSION}"
+
+MODEL_FILE = f'models/{MODEL_NAME}.pkl'
