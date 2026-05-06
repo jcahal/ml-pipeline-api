@@ -17,3 +17,24 @@ services:
       - "5001:5000"
     volumes:
       - ./mlruns:/app/mlruns
+
+  notebook:
+    image: jupyter/scipy-notebook:latest
+    profiles:
+      - dev
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/home/jovyan/work
+    working_dir: /home/jovyan/work
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+
+  shell:
+    image: python:3.11-slim
+    profiles:
+      - dev
+    command: sleep infinity
+    volumes:
+      - .:/app
+    working_dir: /app

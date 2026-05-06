@@ -30,7 +30,7 @@ def predict(request: PredictionRequest) -> PredictionResponse:
     "payment_credit_card"   : df_req.iloc[0].payment_method == 'credit_card',
     "payment_paypal"        : df_req.iloc[0].payment_method == 'paypal'
   }])
-  print(candidate)
+  print(candidate.iloc[0])
 
   prediction = int(_clf.predict(candidate)[0])
   confidence = round(float(_clf.predict_proba(candidate)[0][prediction]), 2)  # index by predicted class to get its probability

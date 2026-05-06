@@ -60,16 +60,24 @@ Swagger UI available at `http://localhost:8000/docs`.
 ## Docker
 
 ```bash
-# Build and run (API on :8000)
+# API only (port 80)
 docker compose up --build
 
-# Build and run with MLflow UI on :5001 also
-docker compose up --build --profile dev
+# Full dev environment (API + MLflow + Jupyter Lab + shell)
+docker compose --profile dev up --build
 
-# Or run the API image directly
+# Run the API image directly
 docker build -t ml-pipeline-api .
 docker run -p 8000:8000 ml-pipeline-api
 ```
+
+### Dev services (`--profile dev`)
+
+| Service | URL / access | Description |
+|---------|-------------|-------------|
+| `mlflow` | `http://localhost:5001` | MLflow tracking UI |
+| `notebook` | `http://localhost:8888` | Jupyter Lab (token printed in logs on first start) |
+| `shell` | `docker compose exec shell bash` | Python 3.11 container with project mounted at `/app` |
 
 ---
 
@@ -132,20 +140,3 @@ pytest tests/
 ```
 
 Requires the model to be trained (`python -m pipeline.trainer`) before running.
-
----
-
-## Known Issues / Next Steps
-
-### Inference normalization
-Numeric features (`age`, `tenure_months`, `monthly_spend`, `num_support_tickets`) are currently passed raw to the model, but the model was trained on min-max scaled values. Predictions will be off until this is fixed.
-
-**Fix:**
-1. In `config.py` — add `SCALER_FILE = 'models/scaler_params.pkl'`
-2. In `pipeline/trainer.py` — after loading data, save min/max per column with `joblib` before transforming:
-   ```python
-   scaler_params = {col: {"min": float(df_init[col].min()), "max": float(df_init[col].max())} for col in config.NUMERICAL_COLS}
-   joblib.dump(scaler_params, config.SCALER_FILE)
-   ```
-3. In `api/model.py` — load `scaler_params.pkl` alongside the model, and apply the normalization to the candidate DataFrame before calling `_clf.predict()`
-4. Re-run `python -m pipeline.trainer` to generate `scaler_params.pkl`

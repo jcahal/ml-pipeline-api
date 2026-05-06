@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class HealthResponse(BaseModel):
   status: str
@@ -13,6 +13,8 @@ class MLflowMetrics(BaseModel):
   training_score          : float
 
 class ModelInfoResponse(BaseModel):
+  model_config = ConfigDict(protected_namespaces=())
+
   model_name     : str
   model_version  : str
   run_id         : str
